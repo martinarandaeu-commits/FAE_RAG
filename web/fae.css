@@ -81,6 +81,10 @@ a.nav-link,a.new-chat{text-decoration:none}
 .portal-page button:disabled{opacity:.62;cursor:wait}
 .portal-page form>button[type=submit]{margin-top:2px}
 .portal-page .login-card form>button[type=submit]{width:100%;margin:5px 0 17px;box-shadow:0 4px 10px #2975bc1a}
+.portal-page .auth-switch{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:17px;margin-top:18px}
+.portal-page .auth-switch p{margin:0;flex:1;font-size:12px}
+.portal-page .registration-note{padding:12px 14px;background:#edf5ff;border:1px solid #d9e8f7;border-radius:10px;font-size:12px;color:#3d6089}
+.portal-page .registration-success{padding:12px 14px;background:#eef9f4;border:1px solid #d9f1e6;border-radius:10px;color:#247b60}
 .portal-page details{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
 .portal-page summary{cursor:pointer;font-size:12px;color:#42658c;font-weight:700;line-height:1.7;padding:4px 0}
 .portal-page details[open]>summary{margin-bottom:12px}

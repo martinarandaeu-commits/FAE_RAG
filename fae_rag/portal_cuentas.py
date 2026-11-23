@@ -45,6 +45,16 @@ class Activacion(Acceso):
     version: Literal["demo-2026-11-v1"]
 
 
+class Registro(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    correo: str = Field(max_length=254)
+    clave: str = Field(min_length=12, max_length=128)
+    confirmar_clave: str = Field(min_length=12, max_length=128)
+    consentimiento: Literal[True]
+    version: Literal["demo-2026-11-v1"]
+
+
 class Token(BaseModel):
     token: str = Field(min_length=30, max_length=128)
 
@@ -193,6 +203,36 @@ def router_cuentas(demo: bool) -> APIRouter:
             "retencion_dias": retencion,
             "demo": demo,
         }
+
+    @router.post("/registrar", status_code=201)
+    def registrar(datos: Registro, request: Request):
+        correo = correo_normalizado(datos.correo)
+        if demo and not correo.endswith(".test"):
+            raise HTTPException(
+                422, "Usa un correo ficticio terminado en .test para la demo."
+            )
+        limitar("registrar", request, 8, correo)
+        if datos.clave != datos.confirmar_clave:
+            raise HTTPException(422, "Las contraseñas no coinciden.")
+        clave = HASHEADOR.hash(datos.clave)
+        uid = str(uuid4())
+        with transaccion() as cur:
+            cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (correo,))
+            cur.execute("SELECT 1 FROM fae_portal.usuarios WHERE correo=%s", (correo,))
+            if cur.fetchone():
+                raise HTTPException(
+                    409,
+                    "No se pudo crear una cuenta con este correo. Si ya tienes cuenta, "
+                    "inicia sesión o solicita un enlace de verificación o recuperación.",
+                )
+            cur.execute(
+                """INSERT INTO fae_portal.usuarios(id,correo,clave,rol,consentimiento,consentido_en)
+                   VALUES (%s,%s,%s,'familia',%s,now())""",
+                (uid, correo, clave, datos.version),
+            )
+            auditar(cur, uid, "registrar_cuenta", uid)
+            token = token_temporal(cur, uid, "verificar", 60)
+        return enviar_token(correo, "verificar", token, demo)
 
     @router.post("/activar")
     def activar(datos: Activacion, request: Request):

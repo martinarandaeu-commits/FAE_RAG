@@ -15,6 +15,18 @@ y la clave inicial de ese archivo e inscribe la cuenta en una aplicación TOTP.
 Para las cuentas ficticias se valida el correo dentro del navegador con un
 token de prueba. Esta operación requiere que el correo termine en `.test`.
 
+## Registro de familias
+
+En `/portal`, selecciona **Crear cuenta**. El registro solicita correo,
+contraseña de al menos 12 caracteres, confirmación y consentimiento.
+La cuenta se habilita para iniciar sesión después de verificar el correo.
+En la demo usa una dirección ficticia como `familia@example.test` y pulsa
+**Verificar correo de prueba** para completar ese paso en el navegador.
+
+El registro crea una cuenta de familia sin dupla asociada. Puedes vincularla
+más adelante con una invitación de tu equipo. El alta de personal continúa
+mediante invitaciones de administración o curaduría.
+
 ## Configuración de administración en Render
 
 El Blueprint genera `FAE_PORTAL_SECRETO` en Render. Para habilitar el primer
