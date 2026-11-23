@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal Familias de Acogida</title>
+<style>
+:root{color-scheme:light;--fondo:#f5f2eb;--tinta:#1e303c;--suave:#495c65;--azul:#1d5675;--borde:#d7d8d2}
+*{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--tinta);font:1rem/1.55 Arial,sans-serif}
+header,main{max-width:1000px;margin:auto;padding:1.3rem clamp(1rem,4vw,2rem)}header{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid var(--borde)}
+h1,h2,h3{font-family:Georgia,serif;line-height:1.16}h1{font-size:clamp(1.8rem,5vw,3rem);margin:.1rem 0}h2{font-size:1.5rem}h3{font-size:1.22rem}
+a{color:var(--azul)}small,p{overflow-wrap:anywhere}.muted{color:var(--suave)}section{background:#fffcf6;border:1px solid var(--borde);border-radius:.6rem;padding:1.1rem;margin:0 0 1rem;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:1rem}.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.row>*{max-width:100%}.entry{padding:.75rem 0;border-top:1px solid var(--borde);overflow-wrap:anywhere}.entry p{margin:.2rem 0}
+label{display:block;margin:.6rem 0}label span{display:block;font-weight:600}input:not([type=checkbox]),textarea,select{display:block;width:100%;border:1px solid #7b8c94;border-radius:.35rem;background:white;color:var(--tinta);font:inherit;padding:.5rem}
+button{border:1px solid var(--azul);background:var(--azul);border-radius:.35rem;color:white;font:inherit;padding:.48rem .75rem;cursor:pointer}button.secondary{background:white;color:var(--azul)}button.danger{background:#8d352c;border-color:#8d352c}button:disabled{opacity:.62;cursor:wait}
+:focus-visible{outline:3px solid #a55316;outline-offset:3px}details>summary{cursor:pointer;padding:.32rem 0;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere}#aviso{color:#7a3325;margin:0 0 .9rem}#aviso:empty{display:none}code{overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<header><div><small>Familias de Acogida</small><h1>Portal FAE</h1></div><div class="row"><a href="/">Volver al asistente</a><button type="button" class="secondary" id="ayuda-portal">Ayuda inmediata</button><button type="button" class="secondary" id="salir" hidden>Cerrar sesión</button></div></header>
+<main>
+<p id="aviso" role="status" aria-live="polite"></p>
+<div id="vista"></div>
+<section aria-labelledby="postulacion"><h2 id="postulacion">Quiero ser familia de acogida</h2>
+<div class="row"><a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Requisitos/" rel="noreferrer">Revisar requisitos</a>
+<a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Etapas-del-proceso/" rel="noreferrer">Ver etapas</a>
+<a href="https://www.ventanillaunicasocial.gob.cl/ficha/131/captacion-familias-acogida" rel="noreferrer">Ir a la postulación oficial</a></div>
+</section>
+<section><h2>Programas y material de apoyo</h2><p class="muted">Este directorio muestra las fichas publicadas por el equipo de contenido.</p>
+ <div id="directorio"></div><div id="materiales"></div>
+</section>
+</main>
+<script>
+"use strict";
+const vista=document.getElementById("vista"), aviso=document.getElementById("aviso");
+const salir=document.getElementById("salir");
+const ayudaPortal=document.getElementById("ayuda-portal");
+const hash=new URLSearchParams(location.hash.slice(1));
+if(location.hash)history.replaceState(null,"",location.pathname);
+let persona=null, consentimiento;
+const desdePortal="/api/portal";
+const textInput=(label, value="",type="text", extra={})=>({label,value,type,...extra});
+const opciones=(label,values,value="")=>({label,type:"select",values,value});
+const check=(label,value=false)=>({label,type:"checkbox",value});
+function nodo(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);return el;}
+function bloque(parent,title,desc){const sec=nodo("section");sec.append(nodo("h2",title));if(desc)sec.append(nodo("p",desc));parent.append(sec);return sec;}
+function boton(parent,text,fn,css="secondary"){const b=nodo("button",text);b.type="button";b.className=css;b.onclick=()=>accion(b,fn);parent.append(b);return b;}
+async function accion(b,fn){b.disabled=true;aviso.textContent="";try{await fn();}catch(e){aviso.textContent=e.message;}finally{b.disabled=false;}}
+async function api(ruta, metodo="GET", datos){
+  const response=await fetch(desdePortal+ruta,{method:metodo,cache:"no-store",headers:datos?{"Content-Type":"application/json"}:{},body:datos?JSON.stringify(datos):undefined});
+  if(!response.ok){const e=await response.json().catch(()=>({}));const error=new Error(typeof e.detail==="string"?e.detail:"No se pudo completar la operación.");error.status=response.status;throw error;}
+  return response.json();
+}
+function formulario(parent, campos, enviar, fn){
+  const form=nodo("form"), inputs={};
+  for(const [name,c] of Object.entries(campos)){
+    const label=nodo("label"), el=nodo(c.type==="select"?"select":c.type==="textarea"?"textarea":"input");
+    label.append(nodo("span",c.label),el);
+    if(c.type==="select"){for(const [v,t] of c.values){const opt=nodo("option",t);opt.value=v;el.append(opt);}}
+    else if(c.type!=="textarea")el.type=c.type;
+    if(c.type==="checkbox")el.checked=c.value;else el.value=c.value??"";
+    el.required=Boolean(c.required); if(c.auto)el.autocomplete=c.auto;
+    if(c.max!==undefined)el.max=c.max;if(c.min!==undefined)el.min=c.min;
+    inputs[name]=el;form.append(label);
+  }
+  const button=nodo("button",enviar);button.type="submit";form.append(button);
+  form.onsubmit=e=>{e.preventDefault();accion(button,async()=>{
+    const data={};
+    for(const [k,el] of Object.entries(inputs))data[k]=el.type==="checkbox"?el.checked:el.type==="number"?(el.value?Number(el.value):null):el.value;
+    await fn(data,form);
+  });};parent.append(form);
+}
+function entrada(el,titulo,desc){const item=nodo("article");item.className="entry";item.append(nodo("strong",titulo));if(desc)item.append(nodo("p",desc));el.append(item);return item;}
+function formAcceso(secret=false){return {
+  correo:textInput("Correo","","email",{required:true,auto:"username"}),
+  clave:textInput("Contraseña","","password",{required:true,auto:secret?"new-password":"current-password"}),
+};}
+function mostrarEnlace(sec, ruta){const box=nodo("div");box.className="entry";const url=location.origin+ruta;
+  box.append(nodo("p",url));boton(box,"Copiar enlace",async()=>{await navigator.clipboard.writeText(url);aviso.textContent="Enlace copiado.";});sec.append(box);}
+function tokenPrueba(datos,tipo){if(!datos.token_prueba)return false;hash.set(tipo,datos.token_prueba);return true;}
+function listaDesplegable(sec,text){const d=nodo("details");d.append(nodo("summary",text));sec.append(d);return d;}
+async function sinSesion(){
+  vista.replaceChildren();salir.hidden=true;
+  if(hash.has("verificar")){
+    const sec=bloque(vista,"Verificar correo");
+    boton(sec,"Confirmar verificación",async()=>{await api("/verificar","POST",{token:hash.get("verificar")});hash.delete("verificar");aviso.textContent="Correo verificado. Ya puedes entrar.";await sinSesion();},"");
+  }
+  if(hash.has("restablecer")){
+    formulario(bloque(vista,"Cambiar contraseña"),{clave:textInput("Nueva contraseña","","password",{required:true,auto:"new-password"})},"Guardar contraseña",async datos=>{
+      await api("/restablecer","POST",{token:hash.get("restablecer"),...datos});hash.delete("restablecer");aviso.textContent="Contraseña actualizada.";await sinSesion();
+    });
+  }
+  if(hash.has("invitacion")){
+    consentimiento=await api("/consentimiento");
+    const sec=bloque(vista,"Activar con invitación",consentimiento.texto);
+    if(consentimiento.demo)sec.append(nodo("p","Para la demo utiliza un correo ficticio, por ejemplo familia@example.test."));
+    sec.append(nodo("p","El historial vence a los "+consentimiento.retencion_dias+" días."));
+    formulario(sec,{...formAcceso(true),consentimiento:{...check("Acepto el consentimiento informado"),required:true}},"Activar cuenta",async datos=>{
+      const res=await api("/activar","POST",{...datos,invitacion:hash.get("invitacion"),version:consentimiento.version});
+      hash.delete("invitacion");
+      const prueba=tokenPrueba(res,"verificar");
+      aviso.textContent=prueba?"Activa el correo ficticio en el paso de verificación.":"Revisa tu correo para verificar tu cuenta.";
+      await sinSesion();
+    });
+  }
+  const sec=bloque(vista,"Iniciar sesión","Si recibiste otra invitación y ya tienes cuenta, entra primero para asociarla.");
+  formulario(sec,{...formAcceso(),codigo:textInput("Código de autenticación del personal")}, "Entrar",async datos=>{
+    if(!datos.codigo)delete datos.codigo;
+    const res=await api("/entrar","POST",datos);
+    if(res.estado==="activo"){await cargar();return;}
+    if(res.estado==="requiere_mfa"){aviso.textContent="Ingresa el código de tu aplicación de autenticación.";return;}
+    if(res.estado==="configurar_mfa"){
+      const alta=bloque(vista,"Configurar segundo factor","Agrega una cuenta en tu aplicación de autenticación con esta clave y confirma su código.");
+      alta.append(nodo("code",res.semilla));
+      formulario(alta,{codigo:textInput("Código de seis dígitos","", "text",{required:true,auto:"one-time-code"})},"Confirmar segundo factor",async datos=>{
+        await api("/mfa/confirmar","POST",{...datos,token:res.token});await cargar();
+      });
+    }
+  });
+  const recuperar=listaDesplegable(sec,"Recuperar contraseña o reenviar verificación");
+  formulario(recuperar,{correo:textInput("Correo","","email",{required:true}),
+    operacion:opciones("Operación",[["restablecer","Recuperar contraseña"],["verificar","Reenviar verificación"]],"restablecer")},"Solicitar enlace",async datos=>{
+    const res=await api(datos.operacion==="verificar"?"/verificacion/reenviar":"/restablecer/solicitar","POST",{correo:datos.correo});
+    if(tokenPrueba(res,datos.operacion)){await sinSesion();return;}
+    aviso.textContent="Si la cuenta está habilitada para esta operación, recibirá un correo.";
+  });
+}
+async function familia(){
+  const sec=bloque(vista,"Mi acogimiento");
+  const perfil=persona.perfil||{}, e=persona.etapa;
+  sec.append(nodo("p",e.estado+(Number.isInteger(e.meses)?" · "+e.meses+" meses desde el inicio":"")));
+  for(const [t,d] of [["Llegada","Adaptación y rutinas"],["Durante el acogimiento","Apoyo y autocuidado"],["Preparación del egreso","Transición y continuidad de vínculos"]])entrada(sec,t,d);
+  for(const q of e.preguntas){const a=nodo("a",q),line=nodo("p");a.href="/#pregunta="+encodeURIComponent(q);line.append(a);sec.append(line);}
+  formulario(listaDesplegable(sec,"Editar perfil opcional"),{
+    inicio:textInput("Mes aproximado de inicio",(perfil.inicio||"").slice(0,7),"month"),
+    tramo:opciones("Edad aproximada",[["","Prefiero omitir"],["0-2","0 a 2 años"],["3-5","3 a 5 años"],["6-11","6 a 11 años"],["12-17","12 a 17 años"]],perfil.tramo||""),
+    tipo:opciones("Tipo de acogimiento",[["","Prefiero omitir"],["externa","Externa"],["extensa","Extensa"],["urgencia","Urgencia"]],perfil.tipo||""),
+    egreso:check("El acogimiento terminó",perfil.egreso)
+  },"Guardar perfil",async data=>{await api("/perfil","PUT",{...data,inicio:data.inicio?data.inicio+"-01":null,tramo:data.tramo||null,tipo:data.tipo||null});await cargar();});
+  const dupla=bloque(vista,"Mi dupla");
+  if(persona.contacto_dupla){const d=persona.contacto_dupla;entrada(dupla,d.programa,d.region);for(const [k,v] of Object.entries(d.contacto))if(v)entrada(dupla,k.replaceAll("_"," "),v);}
+  else dupla.append(nodo("p","Tu cuenta no tiene una dupla activa. Puedes consultar los canales generales de ayuda."));
+  if(hash.has("invitacion"))boton(dupla,"Asociar la nueva invitación",async()=>{await api("/reasociar","POST",{token:hash.get("invitacion")});hash.delete("invitacion");await cargar();},"");
+  const h=bloque(vista,"Mis conversaciones","Solo aparecen consultas que elegiste guardar desde el asistente.");
+  const turns=await api("/historial");if(!turns.length)h.append(nodo("p","Aún no hay consultas guardadas."));
+  for(const t of turns){const item=listaDesplegable(h,t.pregunta);item.append(nodo("p",t.respuesta));boton(item,"Borrar entrada",async()=>{await api("/historial/"+t.id,"DELETE");await cargar();});}
+  const datos=bloque(vista,"Mis datos");const link=nodo("a","Descargar perfil e historial");link.href=desdePortal+"/mis-datos";datos.append(link);
+  formulario(listaDesplegable(datos,"Borrar cuenta y datos"),{
+    clave:textInput("Confirma tu contraseña","","password",{required:true,auto:"current-password"}),
+    confirmar:{...check("Confirmo el borrado definitivo"),required:true}
+  },"Borrar mi cuenta",async data=>{await api("/borrar-cuenta","POST",data);await cargar();aviso.textContent="Cuenta borrada.";});
+}
+const camposContacto=(d={})=>({
+  psicologia:textInput("Psicología",d.psicologia), trabajo_social:textInput("Trabajo social",d.trabajo_social),
+  telefono:textInput("Teléfono o WhatsApp",d.telefono,"tel"), correo:textInput("Correo",d.correo,"email"),
+  horario:textInput("Horario",d.horario), emergencia:textInput("Contacto fuera de horario (solo familias)",d.emergencia)
+});
+async function dupla(){
+  const d=await api("/mi-dupla");const sec=bloque(vista,d.programa,d.region);
+  formulario(listaDesplegable(sec,"Editar contacto"),{...camposContacto(d.contacto),publica:check("Publicar contacto del programa en el directorio",d.publica)},"Guardar contacto",async({publica,...contacto})=>{await api("/mi-dupla","PUT",{publica,contacto});await cargar();});
+  const invites=bloque(vista,"Invitaciones de familias","Usa una etiqueta sin nombres ni datos personales.");
+  formulario(invites,{etiqueta:textInput("Etiqueta opcional")},"Crear enlace",async datos=>{const res=await api("/invitaciones","POST",datos);mostrarEnlace(invites,res.enlace);});
+  for(const i of await api("/invitaciones")){
+    const item=entrada(invites,i.etiqueta||"Invitación",i.estado+" · "+new Date(i.caduca).toLocaleDateString("es-CL"));
+    if(i.estado==="pendiente")boton(item,"Revocar",async()=>{await api("/invitaciones/"+i.id+"/revocar","POST");await cargar();});
+    if(i.vinculada)boton(item,"Desvincular familia",async()=>{await api("/invitaciones/"+i.id+"/desvincular","POST");await cargar();});
+  }
+}
+async function equipos(){
+  const sec=bloque(vista,"Duplas y personal");
+  const duplas=await api("/duplas");
+  const campos=(d={})=>({programa:textInput("Programa FAE",d.programa),region:textInput("Región",d.region),...camposContacto(d.contacto),
+    publica:check("Publicar programa",d.publica),activa:check("Dupla activa",d.activa??true)});
+  const guardar=({programa,region,publica,activa,...contacto})=>({programa,region,publica,activa,contacto});
+  formulario(listaDesplegable(sec,"Registrar dupla"),campos(),"Registrar",async d=>{await api("/duplas","POST",guardar(d));await cargar();});
+  for(const d of duplas)formulario(listaDesplegable(sec,d.programa+(d.activa?"":" · inactiva")),campos(d),"Actualizar",async datos=>{await api("/duplas/"+d.id,"PUT",guardar(datos));await cargar();});
+  const roles=[["dupla","Integrante de dupla"]];if(persona.rol==="admin")roles.push(["curador","Curador de contenido"],["admin","Administrador"]);
+  formulario(listaDesplegable(sec,"Invitar personal"),{
+    correo:textInput("Correo de la persona","","email",{required:true}),rol:opciones("Rol",roles,"dupla"),
+    dupla:opciones("Dupla",[["","Sin dupla"],...duplas.filter(d=>d.activa).map(d=>[d.id,d.programa])])
+  },"Crear enlace",async datos=>{const r=await api("/personal/invitar","POST",{...datos,dupla:datos.dupla||null});mostrarEnlace(sec,r.enlace);});
+}
+async function curadoria(){
+  const sec=bloque(vista,"Fuentes y materiales");
+  const archivo=nodo("input"), carga=nodo("label");archivo.type="file";archivo.accept=".pdf,.docx,.txt";
+  carga.append(nodo("span","Archivo para recuperar el texto"),archivo);sec.append(carga);
+  boton(sec,"Extraer texto para revisar",async()=>{
+    const file=archivo.files[0];if(!file)throw Error("Selecciona un archivo PDF, DOCX o TXT.");
+    if(file.size>2*1024*1024)throw Error("Selecciona un archivo de hasta 2 MB.");
+    const datos=await new Promise((ok,fail)=>{const reader=new FileReader();reader.onload=()=>ok(String(reader.result).split(",")[1]);reader.onerror=()=>fail(Error("No se pudo leer el archivo."));reader.readAsDataURL(file);});
+    const res=await api("/recursos/extraer","POST",{nombre:file.name,datos});
+    sec.querySelector("textarea").value=res.texto;aviso.textContent="Texto cargado en el formulario. Revísalo antes de publicar.";
+  });
+  formulario(sec,{
+    serie:textInput("Código de serie para sus versiones"),clase:opciones("Tipo",[["documento","Documento"],["guia","Guía"],["infografia","Infografía"],["testimonio","Testimonio"],["establecimiento","Establecimiento"]],"documento"),
+    categoria:opciones("Categoría",["01","02","03","04","05"].map(i=>["CAT-"+i,"CAT-"+i]),"CAT-01"),
+    titulo:textInput("Título"),descripcion:textInput("Texto revisado o descripción","","textarea"),enlace:textInput("Enlace HTTPS","","url"),
+    autor:textInput("Autor o institución"),anio:textInput("Año","","number"),licencia:textInput("Licencia o autorización"),
+    vigencia:opciones("Vigencia",[["no_aplica","No aplica"],["vigente","Vigente"],["diferida","Diferida"],["derogada","Derogada"]],"no_aplica"),
+    prioridad:textInput("Prioridad (1 a 5)",5,"number",{min:1,max:5}),
+    region:textInput("Región (solo establecimientos)"),comuna:textInput("Comuna (solo establecimientos)"),
+    direccion:textInput("Dirección (solo establecimientos)"),horario:textInput("Horario (solo establecimientos)"),
+    latitud:textInput("Latitud (solo establecimientos)"),longitud:textInput("Longitud (solo establecimientos)")
+  },"Guardar borrador",async ({region,comuna,direccion,horario,latitud,longitud,...d})=>{
+    const ubicacion=d.clase==="establecimiento"?{region,comuna,direccion,horario,latitud:latitud?Number(latitud):null,longitud:longitud?Number(longitud):null}:null;
+    await api("/recursos","POST",{...d,enlace:d.enlace||null,ubicacion});await cargar();
+  });
+  for(const r of await api("/recursos")){
+    const item=entrada(sec,r.titulo,r.clase+" · "+r.estado+" · "+r.vigencia);
+    if(r.estado==="borrador")formulario(listaDesplegable(item,"Publicar"),{
+      autoriza_uso:{...check("Revisé el permiso de uso"),required:true},
+      sin_datos_identificatorios:{...check("Revisé que no contiene datos identificatorios"),required:true}
+    },"Publicar versión",async d=>{await api("/recursos/"+r.id+"/publicar","POST",d);await cargar();});
+    if(r.estado==="publicado")boton(item,"Retirar",async()=>{await api("/recursos/"+r.id+"/retirar","POST");await cargar();});
+  }
+  const canales=bloque(vista,"Canales de ayuda");
+  const campos=(d={})=>({
+    nombre:textInput("Nombre",d.nombre),telefono:textInput("Teléfono oficial",d.telefono,"tel"),
+    uso:textInput("Cuándo usar",d.uso),region:textInput("Región opcional",d.region),
+    orden:textInput("Orden",d.orden??50,"number",{min:0,max:1000}),aprobado:check("Aprobado por la institución",d.aprobado)
+  });
+  const persistir=(id)=>async d=>{await api("/canales/"+id,"PUT",{...d,region:d.region||null});await cargar();};
+  formulario(listaDesplegable(canales,"Nuevo canal"),campos(),"Guardar",async d=>persistir(crypto.randomUUID())(d));
+  for(const c of await api("/canales"))formulario(listaDesplegable(canales,c.nombre),campos(c),"Guardar cambios",persistir(c.id));
+}
+async function administracion(){
+  const admin=bloque(vista,"Administración técnica");
+  for(const u of await api("/personal")){
+    const item=entrada(admin,u.correo,u.rol+(u.mfa?" · MFA activo":" · MFA pendiente"));
+    if(u.id!==persona.id)boton(item,u.activo?"Dar de baja":"Reactivar",async()=>{await api("/personal/"+u.id,"PUT",{activo:!u.activo});await cargar();});
+  }
+  const a=await api("/ajustes");
+  formulario(listaDesplegable(admin,"Parámetros del asistente"),{
+    retencion_dias:textInput("Días de historial",a.retencion_dias,"number"),
+    invitacion_dias:textInput("Días de invitación",a.invitacion_dias,"number"),
+    limite_fragmentos:textInput("Fragmentos por respuesta",a.limite_fragmentos,"number"),
+    umbral_local:textInput("Umbral E5 (0 a 1)",a.umbral_local)
+  },"Guardar parámetros",async d=>{await api("/ajustes","PUT",{...d,umbral_local:Number(d.umbral_local)});await cargar();});
+  const log=listaDesplegable(admin,"Auditoría de cambios");
+  for(const f of await api("/auditoria"))entrada(log,f.accion,f.objeto+" · "+new Date(f.creado_en).toLocaleString("es-CL"));
+}
+async function metricas(){
+  const sec=bloque(vista,"Panel de brechas","Los grupos de menos de cinco consultas quedan ocultos.");
+  const m=await api("/metricas");const rows=[["semana","tipo","resultado","cantidad"]];
+  for(const f of m.consultas){entrada(sec,f.semana,f.nivel+" · "+f.modo+" · "+f.cantidad);rows.push([f.semana,f.nivel,f.modo,f.cantidad]);}
+  for(const f of m.evaluaciones){entrada(sec,f.semana,(f.util?"Útil":"No útil")+" · "+f.cantidad);rows.push([f.semana,"valoracion",f.util?"util":"no util",f.cantidad]);}
+  if(rows.length===1)sec.append(nodo("p","Aún no hay grupos publicables."));
+  boton(sec,"Descargar CSV agregado",async()=>{const a=nodo("a");const url=URL.createObjectURL(new Blob([rows.map(r=>r.join(",")).join("\n")],{type:"text/csv"}));a.href=url;a.download="brechas-fae.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+}
+async function cargar(){
+  try{persona=await api("/yo");}catch(e){if(e.status!==401)throw e;persona=null;}
+  if(!persona){await sinSesion();return;}
+  vista.replaceChildren();salir.hidden=false;
+  if(persona.rol==="familia"){await familia();return;}
+  if(persona.rol==="dupla"){await dupla();return;}
+  await equipos();if(persona.rol==="admin")await administracion();else await curadoria();
+  await metricas();
+}
+function textoEnlace(el,etiqueta,href){if(!href?.startsWith("https://"))return;const a=nodo("a",etiqueta);a.href=href;a.target="_blank";a.rel="noopener noreferrer";el.append(a);}
+function distancia(a,b){const rad=g=>g*Math.PI/180;const dlat=rad(b.latitud-a.latitude),dlon=rad(b.longitud-a.longitude);const v=Math.sin(dlat/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitud))*Math.sin(dlon/2)**2;return 12742*Math.asin(Math.min(1,Math.sqrt(v)));}
+async function publico(){
+  const d=document.getElementById("directorio"), m=document.getElementById("materiales");
+  const programas=await api("/programas"), materiales=await api("/contenido-publico");
+  const regionSelect=(regions)=>[["","Todas las regiones"],...Array.from(new Set(regions)).sort().map(v=>[v,v])];
+  function mostrarProgramas(region=""){
+    d.querySelector(".lista")?.remove();const lista=nodo("div");lista.className="lista";d.append(lista);
+    for(const p of programas.filter(p=>!region||p.region===region))entrada(lista,p.programa,[p.region,p.contacto.telefono,p.contacto.correo,p.contacto.horario].filter(Boolean).join(" · "));
+    if(!lista.childElementCount)lista.append(nodo("p","No hay programas publicados para esta selección."));
+  }
+  formulario(d,{region:opciones("Programas por región",regionSelect(programas.map(p=>p.region)))},"Filtrar",async({region})=>mostrarProgramas(region));
+  mostrarProgramas();
+  for(const r of materiales.filter(r=>r.clase!=="establecimiento"))textoEnlace(entrada(m,r.titulo,r.descripcion),"Consultar material",r.enlace);
+  const centros=materiales.filter(r=>r.clase==="establecimiento"&&r.ubicacion);
+  const zona=listaDesplegable(m,"Encontrar ayuda cercana");
+  zona.append(nodo("p","Consulta primero los canales aprobados en Ayuda inmediata. La ubicación se usa solo en el navegador para calcular distancias."));
+  const resultados=nodo("div");
+  function mostrarCentros(lista){resultados.replaceChildren();for(const {r,km} of lista.slice(0,3)){
+    const u=r.ubicacion,item=entrada(resultados,r.titulo,[u.direccion,u.horario,Number.isFinite(km)?km.toFixed(1)+" km aproximados":""].filter(Boolean).join(" · "));
+    textoEnlace(item,"Abrir destino en el mapa","https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(u.latitud+","+u.longitud));
+  }if(!lista.length)resultados.append(nodo("p","No hay establecimientos publicados para esta selección."));}
+  formulario(zona,{region:opciones("Región",regionSelect(centros.map(r=>r.ubicacion.region))),
+    comuna:opciones("Comuna",[["","Todas las comunas"],...Array.from(new Set(centros.map(r=>r.ubicacion.comuna))).sort().map(s=>[s,s])])},
+    "Buscar sin ubicación",async d=>mostrarCentros(centros.filter(r=>(!d.region||r.ubicacion.region===d.region)&&(!d.comuna||r.ubicacion.comuna===d.comuna)).map(r=>({r}))));
+  boton(zona,"Usar mi ubicación",async()=>{
+    if(!centros.length){mostrarCentros([]);return;}
+    if(!navigator.geolocation)throw Error("Tu navegador no permite ubicación. Elige una región o comuna.");
+    const p=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,()=>reject(Error("Elige una región o comuna.")),{timeout:8000,maximumAge:0}));
+    mostrarCentros(centros.map(r=>({r,km:distancia(p.coords,r.ubicacion)})).sort((a,b)=>a.km-b.km));
+  });zona.append(resultados);
+}
+salir.onclick=()=>accion(salir,async()=>{await api("/salir","POST");await cargar();});
+ayudaPortal.onclick=()=>accion(ayudaPortal,async()=>{
+  const modal=nodo("dialog");modal.setAttribute("aria-label","Ayuda inmediata");modal.append(nodo("h2","Ayuda inmediata"));
+  const area=nodo("div");modal.append(area);boton(modal,"Cerrar",async()=>modal.close());document.body.append(modal);
+  modal.addEventListener("close",()=>modal.remove());
+  const cargarCanales=async(region="")=>{
+    const res=await fetch("/api/ayuda"+(region?"?region="+encodeURIComponent(region):""),{cache:"no-store"});
+    if(!res.ok)throw Error("Consulta los canales oficiales de tu zona.");
+    const {canales}=await res.json();area.replaceChildren();
+    if(!canales.length)area.append(nodo("p","Aún faltan los canales aprobados. Consulta los servicios oficiales de tu zona."));
+    for(const c of canales){const item=entrada(area,c.nombre,c.uso),link=nodo("a",c.telefono);link.href="tel:"+c.telefono.replace(/[^\d+]/g,"");item.append(link);}
+  };
+  formulario(modal,{region:textInput("Consultar región opcional",persona?.contacto_dupla?.region||"")},"Ver canales",async({region})=>cargarCanales(region));
+  modal.showModal();await cargarCanales();
+});
+Promise.all([cargar(),publico()]).catch(e=>aviso.textContent=e.message);
+</script>
+</body>
+</html>

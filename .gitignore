@@ -1,0 +1,15 @@
+.env
+.env.deploy
+.env.*
+!.env.example
+tmp/
+.venv/
+__pycache__/
+*.pyc
+.venv_preparacion/
+.venv_casa/
+.modelos/
+entrega/
+.ruff_cache/
+resultados/urls/textos_candidatos/
+resultados/urls/textos_aprobados/

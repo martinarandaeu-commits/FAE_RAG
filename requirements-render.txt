@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+psycopg2-binary
+python-dotenv
+argon2-cffi>=25,<26
+cryptography
+pyotp>=2.9,<3
+pypdf

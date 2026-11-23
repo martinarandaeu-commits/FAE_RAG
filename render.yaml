@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: asistente-fae-demo
+    runtime: python
+    region: ohio
+    plan: free
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --no-access-log
+    healthCheckPath: /api/salud
+    envVars:
+      - key: FAE_MODO
+        value: demo
+      - key: FAE_PORTAL
+        value: "1"
+      - key: FAE_PORTAL_SECRETO
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: asistente-fae-demo-db
+          property: connectionString
+
+databases:
+  - name: asistente-fae-demo-db
+    region: ohio
+    plan: free
+    ipAllowList: []
