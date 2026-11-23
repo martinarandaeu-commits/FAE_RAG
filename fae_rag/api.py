@@ -118,6 +118,10 @@ def crear_app(agente: AgenteHibrido | None = None) -> FastAPI:
         def portal_web():
             return FileResponse(BASE / "web" / "portal.html")
 
+    @api.get("/assets/fae.css", include_in_schema=False)
+    def estilos_compartidos():
+        return FileResponse(BASE / "web" / "fae.css", media_type="text/css")
+
     @api.get("/")
     def inicio():
         archivo = BASE / "web" / "index.html"

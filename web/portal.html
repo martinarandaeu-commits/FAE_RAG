@@ -3,34 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Portal Familias de Acogida</title>
-<style>
-:root{color-scheme:light;--fondo:#f5f2eb;--tinta:#1e303c;--suave:#495c65;--azul:#1d5675;--borde:#d7d8d2}
-*{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--tinta);font:1rem/1.55 Arial,sans-serif}
-header,main{max-width:1000px;margin:auto;padding:1.3rem clamp(1rem,4vw,2rem)}header{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid var(--borde)}
-h1,h2,h3{font-family:Georgia,serif;line-height:1.16}h1{font-size:clamp(1.8rem,5vw,3rem);margin:.1rem 0}h2{font-size:1.5rem}h3{font-size:1.22rem}
-a{color:var(--azul)}small,p{overflow-wrap:anywhere}.muted{color:var(--suave)}section{background:#fffcf6;border:1px solid var(--borde);border-radius:.6rem;padding:1.1rem;margin:0 0 1rem;min-width:0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:1rem}.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
-.row>*{max-width:100%}.entry{padding:.75rem 0;border-top:1px solid var(--borde);overflow-wrap:anywhere}.entry p{margin:.2rem 0}
-label{display:block;margin:.6rem 0}label span{display:block;font-weight:600}input:not([type=checkbox]),textarea,select{display:block;width:100%;border:1px solid #7b8c94;border-radius:.35rem;background:white;color:var(--tinta);font:inherit;padding:.5rem}
-button{border:1px solid var(--azul);background:var(--azul);border-radius:.35rem;color:white;font:inherit;padding:.48rem .75rem;cursor:pointer}button.secondary{background:white;color:var(--azul)}button.danger{background:#8d352c;border-color:#8d352c}button:disabled{opacity:.62;cursor:wait}
-:focus-visible{outline:3px solid #a55316;outline-offset:3px}details>summary{cursor:pointer;padding:.32rem 0;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere}#aviso{color:#7a3325;margin:0 0 .9rem}#aviso:empty{display:none}code{overflow-wrap:anywhere}
-</style>
+<meta name="theme-color" content="#10243d">
+<title>Portal FAE | Familias de Acogida</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700;750&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="/assets/fae.css">
 </head>
-<body>
-<header><div><small>Familias de Acogida</small><h1>Portal FAE</h1></div><div class="row"><a href="/">Volver al asistente</a><button type="button" class="secondary" id="ayuda-portal">Ayuda inmediata</button><button type="button" class="secondary" id="salir" hidden>Cerrar sesión</button></div></header>
-<main>
-<p id="aviso" role="status" aria-live="polite"></p>
-<div id="vista"></div>
-<section aria-labelledby="postulacion"><h2 id="postulacion">Quiero ser familia de acogida</h2>
-<div class="row"><a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Requisitos/" rel="noreferrer">Revisar requisitos</a>
-<a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Etapas-del-proceso/" rel="noreferrer">Ver etapas</a>
-<a href="https://www.ventanillaunicasocial.gob.cl/ficha/131/captacion-familias-acogida" rel="noreferrer">Ir a la postulación oficial</a></div>
-</section>
-<section><h2>Programas y material de apoyo</h2><p class="muted">Este directorio muestra las fichas publicadas por el equipo de contenido.</p>
- <div id="directorio"></div><div id="materiales"></div>
-</section>
-</main>
+<body class="portal-page">
+<a class="skip-link" href="#contenido-portal">Saltar al contenido</a>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+ <symbol id="i-scales" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M4 20h16M5 7 2 13h6L5 7zm14 0-3 6h6l-3-6z"/></symbol>
+ <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.6 5.6 0 00-7.9 0l-.9.9-.9-.9a5.6 5.6 0 00-7.9 7.9 0 000 7.9L12 21l8.8-8.5a5.6 5.6 0 000-7.9z"/></symbol>
+ <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 00-14.5-4.5L3 9M3 4v5h5M4 13a8 8 0 0014.5 4.5L21 15m0 5v-5h-5"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2z"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/></symbol>
+ <symbol id="i-hat" viewBox="0 0 24 24"><path d="m2 10 10-5 10 5-10 5-10-5zM6 12v5c4 3 8 3 12 0v-5M22 10v6"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0112 0v2M16 4a3 3 0 010 6M17 14a5 5 0 014 5v1"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+ <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4L22 2zM22 2 11 13"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></symbol>
+ <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+ <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4 10 14M20 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1h6"/></symbol>
+ <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+ <symbol id="i-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9zM13 2v7h7M8 14h8M8 18h5"/></symbol>
+ <symbol id="i-loader" viewBox="0 0 24 24"><path d="M12 3a9 9 0 019 9"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
+ </svg>
+<div class="app portal-app">
+ <div class="portal-mobile-overlay" id="mobile-overlay"></div>
+
+<aside class="sidebar" id="sidebar" aria-label="Menú de navegación">
+ <div class="brand"><div class="brand-mark">FAE</div><div><strong>Asistente FAE</strong><span>Familias de Acogida · Chile</span></div></div>
+ <div class="side-section"><p class="side-heading">Tu espacio</p><a class="new-chat" href="/"><span class="new-left"><svg class="icon sm" aria-hidden="true"><use href="#i-plus"/></svg> Nueva consulta</span><svg class="icon sm" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+ <div class="side-section"><p class="side-heading">Familias y equipos</p><nav class="nav-list" aria-label="Secciones del portal">
+  <a class="nav-link active" href="#vista" aria-current="page"><span class="nav-icon"><svg class="icon " aria-hidden="true"><use href="#i-users"/></svg></span><span class="nav-label">Portal FAE<small>Tu espacio de apoyo</small></span></a>
+  <a class="nav-link" href="/"><span class="nav-icon"><svg class="icon " aria-hidden="true"><use href="#i-book"/></svg></span><span class="nav-label">Asistente documental<small>Preguntas y referencias</small></span></a>
+  <a class="nav-link" href="#postulacion"><span class="nav-icon"><svg class="icon " aria-hidden="true"><use href="#i-heart"/></svg></span><span class="nav-label">Ser familia de acogida<small>Requisitos y postulación</small></span></a>
+  <a class="nav-link" href="#recursos"><span class="nav-icon"><svg class="icon " aria-hidden="true"><use href="#i-file"/></svg></span><span class="nav-label">Programas y materiales<small>Directorio y apoyo cercano</small></span></a>
+ </nav></div>
+ <div class="side-bottom"><div class="knowledge"><div class="knowledge-top"><span class="knowledge-light"></span> Un espacio conectado</div><p>Accede a tu portal, consulta materiales y vuelve al asistente cuando necesites orientación documental.</p></div><p class="side-credit">Asistente FAE · Familias de Acogida<br>La información acompaña el trabajo de los equipos especializados.</p></div>
+</aside>
+ <div class="main portal-main">
+  <header class="topbar">
+   <div class="top-left"><button class="mobile-menu" id="menu" type="button" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false"><svg class="icon " aria-hidden="true"><use href="#i-menu"/></svg></button><div><div class="eyebrow">Familias de Acogida <svg class="icon xs" aria-hidden="true"><use href="#i-chevron"/></svg> Tu espacio</div><h1>Portal FAE</h1></div></div>
+   <div class="topbar-actions"><a class="portal-link" href="/"><svg class="icon xs" aria-hidden="true"><use href="#i-arrow"/></svg> <span>Asistente</span></a><button type="button" class="help-button" id="ayuda-portal">Ayuda inmediata</button><button type="button" class="top-btn secondary" id="salir" hidden>Cerrar sesión</button></div>
+  </header>
+  <main class="portal-content" id="contenido-portal">
+   <div class="portal-intro"><span class="portal-kicker"><svg class="icon sm" aria-hidden="true"><use href="#i-shield"/></svg> Familias y equipos · FAE</span><h2>Tu espacio de apoyo.<br><span>Todo conectado.</span></h2><p id="portal-descripcion">Accede a tu cuenta y encuentra programas, materiales y orientación para acompañar cada etapa del acogimiento.</p></div>
+   <p class="portal-demo-note" id="portal-demo" hidden>Demostración académica con fuentes ficticias. Usa solo ejemplos inventados.</p>
+   <p id="aviso" role="status" aria-live="polite"></p>
+   <div class="portal-layout">
+    <div id="vista" tabindex="-1"></div>
+    <aside class="portal-resources" aria-label="Recursos para familias">
+     <section aria-labelledby="postulacion"><div class="portal-resource-icon teal"><svg class="icon " aria-hidden="true"><use href="#i-heart"/></svg></div><h2 id="postulacion">Quiero ser familia de acogida</h2><p>Conoce el proceso y revisa la información de los canales oficiales.</p>
+      <div class="portal-links"><a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Requisitos/" rel="noreferrer">Revisar requisitos <svg class="icon sm" aria-hidden="true"><use href="#i-external"/></svg></a><a href="https://www.servicioproteccion.gob.cl/portal/Familias-de-Acogida/Etapas-del-proceso/" rel="noreferrer">Ver etapas del proceso <svg class="icon sm" aria-hidden="true"><use href="#i-external"/></svg></a><a href="https://www.ventanillaunicasocial.gob.cl/ficha/131/captacion-familias-acogida" rel="noreferrer">Ir a la postulación oficial <svg class="icon sm" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+     </section>
+     <section aria-labelledby="recursos"><div class="portal-resource-icon"><svg class="icon " aria-hidden="true"><use href="#i-file"/></svg></div><h2 id="recursos">Programas y material de apoyo</h2><p class="muted">Explora las fichas publicadas por el equipo de contenido.</p><div id="directorio"></div><div id="materiales"></div></section>
+    </aside>
+   </div>
+   <p class="portal-footer">El contenido es informativo y no sustituye el acompañamiento de equipos especializados.</p>
+  </main>
+ </div>
+</div>
 <script>
 "use strict";
 const vista=document.getElementById("vista"), aviso=document.getElementById("aviso");
@@ -46,7 +86,7 @@ const check=(label,value=false)=>({label,type:"checkbox",value});
 function nodo(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);return el;}
 function bloque(parent,title,desc){const sec=nodo("section");sec.append(nodo("h2",title));if(desc)sec.append(nodo("p",desc));parent.append(sec);return sec;}
 function boton(parent,text,fn,css="secondary"){const b=nodo("button",text);b.type="button";b.className=css;b.onclick=()=>accion(b,fn);parent.append(b);return b;}
-async function accion(b,fn){b.disabled=true;aviso.textContent="";try{await fn();}catch(e){aviso.textContent=e.message;}finally{b.disabled=false;}}
+async function accion(b,fn){const destino=b.closest("dialog")?.querySelector(".dialog-status")||aviso;b.disabled=true;destino.textContent="";try{await fn();}catch(e){destino.textContent=e.message;}finally{b.disabled=false;}}
 async function api(ruta, metodo="GET", datos){
   const response=await fetch(desdePortal+ruta,{method:metodo,cache:"no-store",headers:datos?{"Content-Type":"application/json"}:{},body:datos?JSON.stringify(datos):undefined});
   if(!response.ok){const e=await response.json().catch(()=>({}));const error=new Error(typeof e.detail==="string"?e.detail:"No se pudo completar la operación.");error.status=response.status;throw error;}
@@ -81,7 +121,7 @@ function mostrarEnlace(sec, ruta){const box=nodo("div");box.className="entry";co
 function tokenPrueba(datos,tipo){if(!datos.token_prueba)return false;hash.set(tipo,datos.token_prueba);return true;}
 function listaDesplegable(sec,text){const d=nodo("details");d.append(nodo("summary",text));sec.append(d);return d;}
 async function sinSesion(){
-  vista.replaceChildren();salir.hidden=true;
+  vista.replaceChildren();salir.hidden=true;document.body.classList.remove("portal-autenticado");document.getElementById("portal-descripcion").textContent="Accede a tu cuenta y encuentra programas, materiales y orientación para acompañar cada etapa del acogimiento.";
   if(hash.has("verificar")){
     const sec=bloque(vista,"Verificar correo");
     boton(sec,"Confirmar verificación",async()=>{await api("/verificar","POST",{token:hash.get("verificar")});hash.delete("verificar");aviso.textContent="Correo verificado. Ya puedes entrar.";await sinSesion();},"");
@@ -104,8 +144,9 @@ async function sinSesion(){
       await sinSesion();
     });
   }
-  const sec=bloque(vista,"Iniciar sesión","Si recibiste otra invitación y ya tienes cuenta, entra primero para asociarla.");
-  formulario(sec,{...formAcceso(),codigo:textInput("Código de autenticación del personal")}, "Entrar",async datos=>{
+  const sec=bloque(vista,"Iniciar sesión","Entra con tu cuenta para acceder a tu espacio. Si recibiste otra invitación, podrás asociarla después de ingresar.");
+  sec.classList.add("login-card");
+  formulario(sec,{...formAcceso(),codigo:textInput("Código del personal (si corresponde)","","text",{auto:"one-time-code"})}, "Entrar",async datos=>{
     if(!datos.codigo)delete datos.codigo;
     const res=await api("/entrar","POST",datos);
     if(res.estado==="activo"){await cargar();return;}
@@ -251,7 +292,7 @@ async function metricas(){
 async function cargar(){
   try{persona=await api("/yo");}catch(e){if(e.status!==401)throw e;persona=null;}
   if(!persona){await sinSesion();return;}
-  vista.replaceChildren();salir.hidden=false;
+  vista.replaceChildren();salir.hidden=false;document.body.classList.add("portal-autenticado");document.getElementById("portal-descripcion").textContent="Encuentra tus herramientas, programas y materiales para acompañar cada etapa del acogimiento.";
   if(persona.rol==="familia"){await familia();return;}
   if(persona.rol==="dupla"){await dupla();return;}
   await equipos();if(persona.rol==="admin")await administracion();else await curadoria();
@@ -291,8 +332,8 @@ async function publico(){
 }
 salir.onclick=()=>accion(salir,async()=>{await api("/salir","POST");await cargar();});
 ayudaPortal.onclick=()=>accion(ayudaPortal,async()=>{
-  const modal=nodo("dialog");modal.setAttribute("aria-label","Ayuda inmediata");modal.append(nodo("h2","Ayuda inmediata"));
-  const area=nodo("div");modal.append(area);boton(modal,"Cerrar",async()=>modal.close());document.body.append(modal);
+  const modal=nodo("dialog");modal.className="help-dialog";modal.setAttribute("aria-label","Ayuda inmediata");modal.append(nodo("h2","Ayuda inmediata"));
+  const area=nodo("div");modal.append(area);const errorModal=nodo("p");errorModal.className="dialog-status";errorModal.setAttribute("role","status");modal.append(errorModal);document.body.append(modal);
   modal.addEventListener("close",()=>modal.remove());
   const cargarCanales=async(region="")=>{
     const res=await fetch("/api/ayuda"+(region?"?region="+encodeURIComponent(region):""),{cache:"no-store"});
@@ -302,9 +343,26 @@ ayudaPortal.onclick=()=>accion(ayudaPortal,async()=>{
     for(const c of canales){const item=entrada(area,c.nombre,c.uso),link=nodo("a",c.telefono);link.href="tel:"+c.telefono.replace(/[^\d+]/g,"");item.append(link);}
   };
   formulario(modal,{region:textInput("Consultar región opcional",persona?.contacto_dupla?.region||"")},"Ver canales",async({region})=>cargarCanales(region));
-  modal.showModal();await cargarCanales();
+  boton(modal,"Cerrar",async()=>modal.close(),"dialog-close");
+  modal.showModal();try{await cargarCanales();}catch(e){errorModal.textContent=e.message;}
 });
-Promise.all([cargar(),publico()]).catch(e=>aviso.textContent=e.message);
+
+const menuPortal=document.getElementById("menu"), lateral=document.getElementById("sidebar"), overlay=document.getElementById("mobile-overlay");
+const pantallaMovil=matchMedia("(max-width:780px)");
+function menuAbierto(abierto){
+  lateral.classList.toggle("open",abierto);overlay.classList.toggle("open",abierto);
+  menuPortal.setAttribute("aria-expanded",String(abierto));
+  menuPortal.setAttribute("aria-label",abierto?"Cerrar menú":"Abrir menú");
+  lateral.inert=pantallaMovil.matches&&!abierto;
+}
+menuPortal.onclick=()=>menuAbierto(menuPortal.getAttribute("aria-expanded")!=="true");
+overlay.onclick=()=>menuAbierto(false);
+lateral.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>menuAbierto(false)));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&lateral.classList.contains("open")){menuAbierto(false);menuPortal.focus();}});
+pantallaMovil.addEventListener("change",()=>menuAbierto(false));menuAbierto(false);
+fetch("/api/salud",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{document.getElementById("portal-demo").hidden=d?.modo!=="demo";}).catch(()=>{});
+Promise.allSettled([cargar(),publico()]).then(resultados=>{const error=resultados.find(r=>r.status==="rejected");if(error)aviso.textContent=error.reason.message;});
+
 </script>
 </body>
 </html>
