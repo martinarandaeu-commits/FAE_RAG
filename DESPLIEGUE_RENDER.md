@@ -1,5 +1,9 @@
 # Demo FAE en Render
 
+Esta guía describe la configuración original con fichas sintéticas. La
+versión con el corpus documental se despliega con el Blueprint actual.
+Consulta [el README](README.md#render) para verificarla.
+
 La demo usa FastAPI, una base PostgreSQL separada y cinco fichas sintéticas.
 Asigna el nivel de derivación, muestra extractos y permite probar la abstención.
 El servicio web usa recuperación textual. El agente documental completo,

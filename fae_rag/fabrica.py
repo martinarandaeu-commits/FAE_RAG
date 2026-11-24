@@ -1,9 +1,11 @@
 """Composición de adaptadores concretos fuera del núcleo del agente."""
 
 import os
+from functools import partial
 
 from .agente import AgenteHibrido
 from .configuracion import cargar_entorno
+from .corpus_render import archivo_corpus
 from .generacion import generar_respuesta_gemini
 from .recuperacion import buscar
 
@@ -11,6 +13,14 @@ from .recuperacion import buscar
 def crear_agente() -> AgenteHibrido:
     """Construir el agente sin abrir conexiones ni consumir API."""
     cargar_entorno()
+    if archivo_corpus() is not None:
+        return con_curaduria(
+            AgenteHibrido(
+                partial(buscar, corpus_render=True),
+                None,
+                similitud_minima=float(os.getenv("RAG_SIMILITUD_MINIMA_LOCAL", "0.84")),
+            )
+        )
     if os.getenv("FAE_MODO") == "demo":
         from .demostracion import buscar_demo
 

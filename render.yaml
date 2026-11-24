@@ -4,7 +4,7 @@ services:
     runtime: python
     region: ohio
     plan: free
-    buildCommand: pip install -r requirements-render.txt
+    buildCommand: pip install -r requirements-render.txt -r requirements-render-modelo.txt && python preparar_modelo_render.py
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --no-access-log
     healthCheckPath: /api/salud
     envVars:
@@ -12,6 +12,8 @@ services:
         value: demo
       - key: FAE_PORTAL
         value: "1"
+      - key: FAE_CORPUS_JSON
+        value: corpus/vectorizaciones_fae_e5.json.gz
       - key: FAE_PORTAL_SECRETO
         generateValue: true
       - key: DATABASE_URL

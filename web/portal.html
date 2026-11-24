@@ -401,7 +401,7 @@ overlay.onclick=()=>menuAbierto(false);
 lateral.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>menuAbierto(false)));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&lateral.classList.contains("open")){menuAbierto(false);menuPortal.focus();}});
 pantallaMovil.addEventListener("change",()=>menuAbierto(false));menuAbierto(false);
-fetch("/api/salud",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{document.getElementById("portal-demo").hidden=d?.modo!=="demo";}).catch(()=>{});
+fetch("/api/salud",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{const nota=document.getElementById("portal-demo");nota.hidden=d?.modo!=="demo";if(d?.corpus?.tipo==="documental")nota.textContent="Portal de prueba con fuentes documentales revisadas. Usa cuentas y consultas ficticias.";}).catch(()=>{});
 Promise.allSettled([cargar(),publico()]).then(resultados=>{const error=resultados.find(r=>r.status==="rejected");if(error)aviso.textContent=error.reason.message;});
 
 </script>

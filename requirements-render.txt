@@ -6,3 +6,7 @@ argon2-cffi>=25,<26
 cryptography
 pyotp>=2.9,<3
 pypdf
+ijson==3.6.0
+numpy
+onnxruntime==1.32.0
+tokenizers

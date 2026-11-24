@@ -57,7 +57,11 @@ LIMIT %(limite)s
 
 
 def buscar(
-    pregunta: str, categoria: str | None = None, limite: int = 3
+    pregunta: str,
+    categoria: str | None = None,
+    limite: int = 3,
+    *,
+    corpus_render: bool = False,
 ) -> list[Documento]:
     """Combinar dos rankings sin sumar escalas de relevancia incompatibles."""
     if not pregunta or not pregunta.strip():
@@ -67,7 +71,16 @@ def buscar(
     limite = max(1, min(10, int(limite)))
     cargar_entorno()
     backend = os.getenv("RAG_EMBEDDING_BACKEND", "gemini").lower()
-    if backend == "gemini":
+    if corpus_render:
+        from .corpus_render import MODELO_CORPUS, TABLA_CORPUS
+        from .embeddings_render import crear_cliente as crear_render
+        from .embeddings_render import generar_embedding as generar_render
+
+        crear = crear_render
+        vectorizar = generar_render
+        modelo = MODELO_CORPUS
+        consulta = CONSULTA_HIBRIDA.replace("public.vectores_rag_fae", TABLA_CORPUS)
+    elif backend == "gemini":
         crear = crear_cliente
         vectorizar = generar_embedding
         modelo = MODELO_EMBEDDING
@@ -89,7 +102,7 @@ def buscar(
     try:
         vector = vectorizar(pregunta, cliente, "RETRIEVAL_QUERY")
     finally:
-        if backend == "gemini":
+        if backend == "gemini" and not corpus_render:
             cliente.close()
 
     import psycopg2

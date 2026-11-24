@@ -38,9 +38,13 @@ class Evaluacion(BaseModel):
 
 def crear_app(agente: AgenteHibrido | None = None) -> FastAPI:
     """Permitir ejecutar la API con un agente real o un doble de pruebas."""
+    from .corpus_render import archivo_corpus
+
     servicio = agente if agente is not None else crear_agente()
     demo = os.getenv("FAE_MODO") == "demo"
     portal = os.getenv("FAE_PORTAL") == "1"
+    corpus = archivo_corpus() if agente is None else None
+    vectores_corpus = 0
 
     if portal:
         from .portal_auth import cifrador, inicializar_admin, limitar, titular
@@ -58,7 +62,14 @@ def crear_app(agente: AgenteHibrido | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def iniciar(_api: FastAPI):
-        if demo and agente is None:
+        nonlocal vectores_corpus
+        if corpus is not None:
+            from .corpus_render import cargar_corpus
+            from .embeddings_render import crear_cliente
+
+            vectores_corpus = await run_in_threadpool(cargar_corpus, corpus)
+            await run_in_threadpool(crear_cliente)
+        elif demo and agente is None:
             from .demostracion import preparar_demo
 
             await run_in_threadpool(preparar_demo)
@@ -137,6 +148,11 @@ def crear_app(agente: AgenteHibrido | None = None) -> FastAPI:
             "agente": "hibrido_reactivo_deliberativo",
             "modo": "demo" if demo else "documental",
             "portal": portal,
+            **(
+                {"corpus": {"tipo": "documental", "vectores": vectores_corpus}}
+                if corpus is not None
+                else {}
+            ),
             "modelo_chat": None
             if demo or portal
             else os.getenv("GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite"),

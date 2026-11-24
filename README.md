@@ -1,19 +1,25 @@
-# Demo FAE en Render
+# Asistente FAE
 
-La demo usa FastAPI, una base PostgreSQL separada y cinco fichas sintéticas.
-Asigna el nivel de derivación, muestra extractos y permite probar la abstención.
-El servicio web usa recuperación textual. El agente documental completo,
-con E5 y pgvector, sigue disponible en el computador.
-El mismo Blueprint habilita el portal de familia y el backoffice de prueba.
+El agente carga 4.671 vectores E5 de 768 dimensiones desde
+`corpus/vectorizaciones_fae_e5.json.gz`. PostgreSQL almacena los fragmentos
+y sus metadatos JSONB, con índices HNSW y GIN. El chat combina búsqueda
+semántica y textual, devuelve extractos con citas, se abstiene si falta
+evidencia y deriva los casos urgentes.
 
-## Revisión en este computador
+## Solemne II
 
-Ejecuta `python iniciar_portal_demo.py` y abre `http://127.0.0.1:8010/portal`.
-Se usa la base separada `fae_demo_portal_local`. La cuenta de administración
-de prueba y el secreto de cifrado se generan en `.env.portal`. Usa el correo
-y la clave inicial de ese archivo e inscribe la cuenta en una aplicación TOTP.
-Para las cuentas ficticias se valida el correo dentro del navegador con un
-token de prueba. Esta operación requiere que el correo termine en `.test`.
+La matriz original está en `data/`. Para reproducir el preprocesamiento de
+las 105 referencias y comprobar sus cinco categorías, ejecuta:
+
+```sh
+python -m pip install -r requirements-solemne.txt
+python pipeline_rag.py --modo validar
+```
+
+`02_esquema_local.sql` documenta la colección E5 local. En Render,
+`fae_rag/corpus_render.py` prepara `fae_corpus.vectores` y carga el JSON
+de forma automática. El corpus incluye 105 referencias bibliográficas,
+4.535 fragmentos de URL y 31 fragmentos suplementarios.
 
 ## Registro de familias
 
@@ -48,28 +54,16 @@ En el portal documental, la publicación de documentos y guías genera
 fragmentos E5 en el esquema `fae_portal`. La búsqueda descarta borradores y
 versiones retiradas, y conserva los índices originales en `public`.
 
-## Repositorio privado
-
-Genera el ZIP de publicación con `python preparar_render.py`. El paquete
-contiene solo los archivos necesarios para que Render instale y ejecute la
-demo. Mantén el repositorio privado y coloca `render.yaml` en la raíz.
-
-Para publicar con acceso delegado, guarda `GITHUB_TOKEN` localmente en
-`.env.deploy` y ejecuta `python preparar_render.py --github`. El token debe
-poder crear repositorios privados y escribir contenido. El comando comprueba
-que el repositorio sea privado y que su único archivo inicial sea el README
-de GitHub antes de subir el código. Revoca el token cuando termine la publicación.
-
 ## Render
 
-1. En Render, conecta GitHub con acceso al repositorio privado de la demo.
-2. Abre **New → Blueprint** y selecciona el repositorio. Revisa que el
-   servicio web y PostgreSQL indiquen el plan `free` antes de aplicar.
-3. Espera a que el servicio esté activo. Render proporciona `DATABASE_URL`
-   mediante la conexión interna de su PostgreSQL. La aplicación carga sus
-   fichas de demostración de forma idempotente.
-4. Ejecuta `python comprobar_demo.py URL` para probar el chat, las fuentes,
-   la derivación, la abstención y la respuesta progresiva.
+El Blueprint `render.yaml` instala las dependencias, prepara el modelo E5
+compacto y configura `DATABASE_URL` y `FAE_CORPUS_JSON`. En el primer
+arranque el agente carga el corpus. Los arranques posteriores reutilizan
+el índice si el JSON conserva la misma huella.
+
+Después del despliegue, usa `python comprobar_demo.py URL --corpus` para
+verificar que el enlace devuelve citas del corpus documental, permite
+probar la abstención y expone la ruta de derivación.
 
 El servicio gratuito puede suspenderse cuando está inactivo y la base
 gratuita vence a los 30 días. [Documentación](https://render.com/docs/free).

@@ -9,6 +9,7 @@ __pycache__/
 .venv_preparacion/
 .venv_casa/
 .modelos/
+.modelos_render/
 entrega/
 .ruff_cache/
 resultados/urls/textos_candidatos/
